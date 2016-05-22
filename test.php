@@ -3,6 +3,7 @@
 /*
 Plugin Name: WpCrud Test
 Plugin URI: http://github.com/limikael/wpcrud
+GitHub Plugin URI: http://github.com/limikael/wpcrud
 Description: Test for WpCrud. This is a library not a plugin! It exploses itself as a plugin for testing purposes only!
 Version: 0.0.1
 */
