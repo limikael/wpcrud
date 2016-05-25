@@ -26,6 +26,13 @@ class WpCrudTest extends WpCrud {
 				"a"=>"First Letter",
 				"b"=>"Second Letter"
 			));
+
+		$this->addField("im")
+			->type("image")
+			->description("You can select an image from the media library here");
+
+		$this->addField("im2")
+			->type("image");
 	}
 
 	function getItem($id) {
@@ -51,11 +58,15 @@ class WpCrudTest extends WpCrud {
 				"UPDATE {$wpdb->prefix}crudtest ".
 				"SET    text=%s, ".
 				"       stamp=%s, ".
-				"       sel=%s ".
+				"       sel=%s, ".
+				"       im=%s, ".
+				"       im2=%s ".
 				"WHERE  id=%s",
 				$item->text,
 				$item->stamp,
 				$item->sel,
+				$item->im,
+				$item->im2,
 				$item->id
 			));
 		}
@@ -65,10 +76,14 @@ class WpCrudTest extends WpCrud {
 				"INSERT INTO {$wpdb->prefix}crudtest ".
 				"SET         text=%s, ".
 				"            stamp=%s, ".
-				"            sel=%s ",
+				"            sel=%s, ".
+				"            im=%s, ".
+				"            im2=%s ",
 				$item->text,
 				$item->stamp,
-				$item->sel
+				$item->sel,
+				$item->im,
+				$item->im2
 			));
 		}
 
@@ -113,6 +128,8 @@ function wpcrudtest_activate() {
 		"    text VARCHAR(255) NOT NULL, ".
 		"    stamp INTEGER NOT NULL, ".
 		"    sel VARCHAR(255) NOT NULL, ".
+		"    im VARCHAR(255) NOT NULL, ".
+		"    im2 VARCHAR(255) NOT NULL, ".
 		"    PRIMARY KEY (id) ".
 		")",
 		NULL

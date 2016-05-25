@@ -25,27 +25,32 @@
 								type="text" 
 								style="width: 95%" 
 								value="<?php echo esc_attr($field['value'])?>"
-								size="50" class="code" placeholder="">
-						<script>
-							console.log("here");
-							jQuery(document).ready(function($) {
-							    $('#<?php echo $field["field"] ?>').datetimepicker({
-							    	format: 'Y-m-d H:i'
-							    });
-							});
-						</script>
+								size="50" placeholder="" 
+								class="code wpcrud-timestamp"/>
 					<?php } else if ($field["spec"]->type=="textarea") { ?>
 						<textarea id="<?php echo $field["field"] ?>"
 							name="<?php echo $field["field"] ?>"
 							style="width: 95%; height: 100px" class="code"
 						><?php echo esc_attr($field['value'])?></textarea>
+					<?php } else if ($field["spec"]->type=="image") { ?>
+						<input type="hidden" 
+							name="<?php echo $field["field"] ?>"
+							id="<?php echo $field["field"] ?>"
+							value="<?php echo esc_attr($field['value'])?>"/>
+						<a class="wpcrud-media-image-link" href="#"
+							media-image-id="<?php echo $field["field"] ?>">
+							<img class="wpcrud-media-image"
+								src="<?php echo $field["src"]; ?>"
+								id="<?php echo $field["field"] ?>-image"
+								style="height: 75px"/>
+						</a>
 					<?php } else { ?>
 						<input id="<?php echo $field["field"] ?>" 
 								name="<?php echo $field["field"] ?>" 
 								type="text" 
 								style="width: 95%" 
 								value="<?php echo esc_attr($field['value'])?>"
-								size="50" class="code" placeholder="">
+								size="50" class="code" placeholder=""/>
 					<?php } ?>
 					<?php if ($field["description"]) { ?>
 						<p class="description"><?php echo $field["description"]; ?></p>

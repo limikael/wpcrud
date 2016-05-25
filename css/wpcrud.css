@@ -1,0 +1,12 @@
+.wpcrud-media-image {
+	border: 1px solid black;
+	padding: 2px;
+	height: 75px;
+}
+
+/*.wpcrud-media-image-link {
+	height: 200px !important;
+	width: 200px !important;
+	position: relative !important;
+	background: #ff0000 !important;
+}*/
