@@ -8,7 +8,7 @@ Description: Test for WpCrud. This is a library not a plugin! It exploses itself
 Version: 0.0.2
 */
 
-require_once __DIR__."/WpCrud.php"; /* test... */
+require_once __DIR__."/WpCrud.php"; /* test ... !!! */
 
 class WpCrudTest extends WpCrud {
 
