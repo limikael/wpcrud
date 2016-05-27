@@ -36,7 +36,7 @@
 							name="<?php echo $field["field"] ?>"
 							style="width: 95%; height: 100px" class="code"
 						><?php echo esc_attr($field['value'])?></textarea>
-					<?php } else if ($field["spec"]->type=="image") { ?>
+					<?php } else if ($field["spec"]->type=="media-image") { ?>
 						<input type="hidden" 
 							name="<?php echo $field["field"] ?>"
 							id="<?php echo $field["field"] ?>"

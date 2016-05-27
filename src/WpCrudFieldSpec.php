@@ -31,7 +31,7 @@ class WpCrudFieldSpec {
 
 	public function type($type) {
 		$types=array(
-			"text","select","timestamp","image"
+			"text","select","timestamp","media-image"
 		);
 
 		if (!in_array($type, $types))

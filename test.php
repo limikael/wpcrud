@@ -28,11 +28,11 @@ class WpCrudTest extends WpCrud {
 			));
 
 		$this->addField("im")
-			->type("image")
+			->type("media-image")
 			->description("You can select an image from the media library here");
 
 		$this->addField("im2")
-			->type("image");
+			->type("media-image");
 	}
 
 	function getItem($id) {

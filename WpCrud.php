@@ -193,7 +193,7 @@ abstract class WpCrud extends WP_List_Table {
 			return date('Y-m-d H:i',intval($v));
 		}
 
-		else if ($fieldspec->type=="image") {
+		else if ($fieldspec->type=="media-image") {
 			return sprintf('<img src="%s" class="wpcrud-list-media-image" style="max-width: 50px; max-height: 50px">',
 				esc_attr($item->$column_name));
 		}
@@ -353,7 +353,7 @@ abstract class WpCrud extends WP_List_Table {
 
 					break;
 
-				case "image":
+				case "media-image":
 					$field["src"]=$field["value"];
 
 					if (!$field["src"])
