@@ -1,3 +1,7 @@
+<script>
+	EMPTY_IMAGE_URL="<?php echo $emptyImageUrl; ?>";
+</script>
+
 <table cellspacing="2" cellpadding="5" style="width: 100%;" class="form-table">
 	<tbody>
 		<?php foreach ($fields as $field) { ?>
@@ -37,13 +41,22 @@
 							name="<?php echo $field["field"] ?>"
 							id="<?php echo $field["field"] ?>"
 							value="<?php echo esc_attr($field['value'])?>"/>
-						<a class="wpcrud-media-image-link" href="#"
-							media-image-id="<?php echo $field["field"] ?>">
-							<img class="wpcrud-media-image"
-								src="<?php echo $field["src"]; ?>"
-								id="<?php echo $field["field"] ?>-image"
-								style="height: 75px"/>
-						</a>
+						<div class="wpcrud-media-image-holder"
+							media-image-id="<?php echo $field["field"]; ?>">
+							<a class="wpcrud-media-image-link" href="#"
+								media-image-id="<?php echo $field["field"]; ?>">
+								<img class="wpcrud-media-image"
+									src="<?php echo $field["src"]; ?>"
+									id="<?php echo $field["field"] ?>-image"
+									style="height: 75px"
+									media-image-id="<?php echo $field["field"] ?>"/>
+							</a>
+							<img src="<?php echo $deleteIconUrl; ?>"
+								class="wpcrud-media-image-delete-button"
+								style="width: 20px; height: 20px; display: none"
+								media-image-id="<?php echo $field["field"]; ?>"
+								id="<?php echo $field["field"] ?>-delete-button"/>
+						</div>
 					<?php } else { ?>
 						<input id="<?php echo $field["field"] ?>" 
 								name="<?php echo $field["field"] ?>" 

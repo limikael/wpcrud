@@ -185,12 +185,17 @@ abstract class WpCrud extends WP_List_Table {
 			return $fieldspec->options[$item->$column_name];
 		}
 
-		if ($fieldspec->type=="timestamp") {
+		else if ($fieldspec->type=="timestamp") {
 			$v=$item->$column_name;
 			if (!$v)
 				return "";
 
 			return date('Y-m-d H:i',intval($v));
+		}
+
+		else if ($fieldspec->type=="image") {
+			return sprintf('<img src="%s" class="wpcrud-list-media-image" style="max-width: 50px; max-height: 50px">',
+				esc_attr($item->$column_name));
 		}
 
 		return $item->$column_name;
@@ -200,6 +205,11 @@ abstract class WpCrud extends WP_List_Table {
 	 * Render the page.
 	 */
 	public function list_handler() {
+		wp_enqueue_script("wpcrud");
+		wp_enqueue_style("wpcrud");
+		wp_enqueue_script("jquery-datetimepicker");
+		wp_enqueue_style("jquery-datetimepicker");
+
 		$template=new Template(__DIR__."/tpl/itemlist.php");
 
 		if (isset($_REQUEST["action"]) && $_REQUEST["action"]=="delete") {
@@ -241,10 +251,10 @@ abstract class WpCrud extends WP_List_Table {
 	 * Internal.
 	 */
 	public function form_handler() {
-		wp_enqueue_script("jquery-datetimepicker");
-		wp_enqueue_style("jquery-datetimepicker");
 		wp_enqueue_script("wpcrud");
 		wp_enqueue_style("wpcrud");
+		wp_enqueue_script("jquery-datetimepicker");
+		wp_enqueue_style("jquery-datetimepicker");
 
 		$template=new Template(__DIR__."/tpl/itemformpage.php");
 
@@ -314,7 +324,6 @@ abstract class WpCrud extends WP_List_Table {
 	 */
 	public function meta_box_handler($item) {
 		$template=new Template(__DIR__."/tpl/itemformbox.php");
-
 		$fields=array();
 
 		foreach ($this->getEditFields() as $fieldId) {
@@ -356,6 +365,8 @@ abstract class WpCrud extends WP_List_Table {
 		}
 
 		$template->set("fields",$fields);
+		$template->set("deleteIconUrl",admin_url('admin-ajax.php')."?action=wpcrud_res&res=delete-icon.png");
+		$template->set("emptyImageUrl",site_url()."/wp-includes/images/media/default.png");
 		$template->show();
 	}
 
