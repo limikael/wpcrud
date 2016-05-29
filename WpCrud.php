@@ -22,24 +22,23 @@ use wpcrud\WpCrudFieldSpec;
  * - saveItem
  * - deleteItem
  * - getAllItems
+ * - getLiteral
  */
 abstract class WpCrud extends WP_List_Table {
 
 	private static $scriptsEnqueued;
 
-	private $typeName;
-	private $typeId;
 	private $fields=array();
 	private $listFields;
 	private $editFields;
-	private $submenuSlug;
-	private $description;
+	private $parentMenuSlug;
+	private $typeId;
 
 	/**
 	 * Constructor.
 	 */
 	public final function __construct() {
-		$this->setTypeName(get_called_class());
+		$this->typeId=strtolower(get_called_class());
 
 		parent::__construct(array(
 			"screen"=>$this->typeId
@@ -55,25 +54,10 @@ abstract class WpCrud extends WP_List_Table {
 	protected function init() {}
 
 	/**
-	 * Set description.
+	 * Set parent menu slug.
 	 */
-	public function setDescription($description) {
-		$this->description=$description;
-	}
-
-	/**
-	 * Set submenu slug.
-	 */
-	protected function setSubmenuSlug($slug) {
-		$this->submenuSlug=$slug;
-	}
-
-	/**
-	 * Set the name of the type being managed.
-	 */
-	protected function setTypeName($name) {
-		$this->typeName=$name;
-		$this->typeId=strtolower(str_replace(" ", "", $name));
+	protected function setParentMenuSlug($slug) {
+		$this->parentMenuSlug=$slug;
 	}
 
 	/**
@@ -238,12 +222,37 @@ abstract class WpCrud extends WP_List_Table {
 
 		$this->items=$this->getAllItems();
 
-		$template->set("description",$this->description);
-		$template->set("title",$this->typeName);
+		$template->set("description",$this->getLiteralWrap("description"));
+		$template->set("title",$this->getLiteralWrap("typeName"));
 		$template->set("typeId",$this->typeId);
 		$template->set("listTable",$this);
 		$template->set("addlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId.'_form'));
 		$template->show();
+	}
+
+	/**
+	 * Call potentially overridden getLiteral and provide default
+	 * if not customized.
+	 */
+	private function getLiteralWrap($literal) {
+		$text=$this->getLiteral($literal);
+		if (isset($text))
+			return $text;
+
+		switch ($literal) {
+			case "description":
+				return "blabla";
+
+			case "typeName":
+				return get_called_class();
+		}
+	}
+
+	/**
+	 * Override this in subclass to provide a customized name, description
+	 * and other user interface elements.
+	 */
+	public function getLiteral($literal) {
 	}
 
 	/**
@@ -297,7 +306,7 @@ abstract class WpCrud extends WP_List_Table {
 
 			else {
 				$this->saveItem($item);
-				$template->set("message",$this->typeName." saved.");
+				$template->set("message",$this->getLiteralWrap("typeName")." saved.");
 			}
 		}
 
@@ -307,11 +316,11 @@ abstract class WpCrud extends WP_List_Table {
 		else
 			$item=$this->createItem();
 
-		add_meta_box($this->typeId."_meta_box",$this->typeName,array($this,"meta_box_handler"),$this->typeId, 'normal_'.$this->typeId, 'default');
+		add_meta_box($this->typeId."_meta_box",$this->getLiteralWrap("typeName"),array($this,"meta_box_handler"),$this->typeId, 'normal_'.$this->typeId, 'default');
 
-		$template->set("title",$this->typeName);
+		$template->set("title",$this->getLiteralWrap("typeName"));
 		$template->set("nonce",wp_create_nonce(basename(__FILE__)));
-		$template->set("backlink",get_admin_url(get_current_blog_id(),'admin.php?page='.strtolower($this->typeName)));
+		$template->set("backlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId));
 		$template->set("metabox",$this->typeId);
 		$template->set("metaboxContext","normal_".$this->typeId);
 		$template->set("item",$item);
@@ -511,33 +520,40 @@ abstract class WpCrud extends WP_List_Table {
 	public static function admin_menu() {
 		$instance=new static();
 
-		if ($instance->submenuSlug)
+		if ($instance->parentMenuSlug)
 			$screenId=add_submenu_page(
-				$instance->submenuSlug,
-				"Manage ".$instance->typeName,
-				"Manage ".$instance->typeName,
+				$instance->parentMenuSlug,
+				"Manage ".$instance->getLiteralWrap("typeName"),
+				"Manage ".$instance->getLiteralWrap("typeName"),
 				"manage_options",
-				strtolower($instance->typeName),
+				$instance->typeId,
 				array($instance,"list_handler")
 			);
 
 		else
 			$screenId=add_menu_page(
-				$instance->typeName,
-				$instance->typeName,
+				$instance->getLiteralWrap("typeName"),
+				$instance->getLiteralWrap("typeName"),
 				"manage_options",
-				strtolower($instance->typeName),
+				$instance->typeId,
 				array($instance,"list_handler")
 			);
 
-	    add_submenu_page(NULL, "Edit ".$instance->typeName, "Edit ".$instance->typeName, 'activate_plugins', $instance->typeId.'_form', array($instance,"form_handler"));
+	    add_submenu_page(
+	    	NULL,
+	    	"Edit ".$instance->getLiteralWrap("typeName"),
+	    	"Edit ".$instance->getLiteralWrap("typeName"),
+	    	'manage_options',
+	    	$instance->typeId.'_form',
+	    	array($instance,"form_handler")
+	    );
 	}
 
 	/**
 	 * Setup.
 	 */
 	public static function setup() {
-		add_action("admin_menu",get_called_class()."::admin_menu");
+		add_action("admin_menu",get_called_class()."::admin_menu",11);
 		add_action("admin_enqueue_scripts","WpCrud::admin_enqueue_scripts");
 		add_action("wp_ajax_wpcrud_res","WpCrud::res");
 	}

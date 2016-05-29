@@ -33,6 +33,16 @@ class WpCrudTest extends WpCrud {
 
 		$this->addField("im2")
 			->type("media-image");
+
+//		$this->setParentMenuSlug("h5p");
+	}
+
+	function getLiteral($literal) {
+		switch ($literal) {
+			case "description":
+				return "hello world bla";
+				break;
+		}
 	}
 
 	function getItem($id) {
