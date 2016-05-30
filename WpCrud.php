@@ -30,7 +30,6 @@ abstract class WpCrud extends WP_List_Table {
 
 	private static $scriptsEnqueued;
 
-	//private $fields=array();
 	private $defaultBox;
 	private $listFields;
 	private $editFields;
@@ -47,6 +46,7 @@ abstract class WpCrud extends WP_List_Table {
 
 		$this->typeId=strtolower(get_called_class());
 		$this->defaultBox=new WpCrudBox($this->getLiteralWrap("typeName"));
+		$this->defaultBox->setWpCrud($this);
 
 		$this->init();
 	}
@@ -73,9 +73,6 @@ abstract class WpCrud extends WP_List_Table {
 	 */
 	protected function addField($fieldId) {
 		return $this->defaultBox->addField($fieldId);
-
-		/*$this->fields[$field]=new WpCrudFieldSpec($field);
-		return $this->fields[$field];*/
 	}
 
 	/**
@@ -103,11 +100,6 @@ abstract class WpCrud extends WP_List_Table {
 			$fieldSpec=$this->defaultBox->addField($fieldId);
 
 		return $fieldSpec;
-
-/*		if (!isset($this->fields[$field]))
-			$this->addField($field);
-
-		return $this->fields[$field];*/
 	}
 
 	/**
@@ -118,7 +110,6 @@ abstract class WpCrud extends WP_List_Table {
 			return $this->editFields;
 
 		return $this->defaultBox->getFieldIds();
-		//return array_keys($this->fields);
 	}
 
 	/**
@@ -129,7 +120,6 @@ abstract class WpCrud extends WP_List_Table {
 			return $this->listFields;
 
 		return $this->defaultBox->getFieldIds();
-		//return array_keys($this->fields);
 	}
 
 	/**
@@ -337,7 +327,7 @@ abstract class WpCrud extends WP_List_Table {
 			$this->typeId,
 			'normal_'.$this->typeId,
 			'default',
-			"oneee");
+			$this->defaultBox);
 
 		/*add_meta_box(
 			$this->typeId."_another_meta_box",
@@ -361,54 +351,10 @@ abstract class WpCrud extends WP_List_Table {
 	 * Meta box handler.
 	 * Internal.
 	 */
-	public function meta_box_handler($item, $box) {
-		//print_r($box);
-
-		$template=new Template(__DIR__."/tpl/itemformbox.php");
-		$fields=array();
-
-		foreach ($this->getEditFields() as $fieldId) {
-			$fieldspec=$this->getFieldSpec($fieldId);
-
-			$field=array(
-				"spec"=>$fieldspec,
-				"field"=>$fieldspec->field,
-				"label"=>$fieldspec->label,
-				"description"=>$fieldspec->description,
-				"value"=>$this->getFieldValue($item,$fieldId)
-			);
-
-			// pre process fields.
-			switch ($fieldspec->type) {
-				case "timestamp":
-					if ($field["value"]) {
-						$oldTz=date_default_timezone_get();
-						date_default_timezone_set(get_option('timezone_string'));
-						$field["value"]=date("Y-m-d H:i",$field["value"]);
-						date_default_timezone_set($oldTz);
-					}
-
-					else {
-						$field["value"]="";
-					}
-
-					break;
-
-				case "media-image":
-					$field["src"]=$field["value"];
-
-					if (!$field["src"])
-						$field["src"]=site_url()."/wp-includes/images/media/default.png";
-					break;
-			}
-
-			$fields[]=$field;
-		}
-
-		$template->set("fields",$fields);
-		$template->set("deleteIconUrl",admin_url('admin-ajax.php')."?action=wpcrud_res&res=delete-icon.png");
-		$template->set("emptyImageUrl",site_url()."/wp-includes/images/media/default.png");
-		$template->show();
+	public function meta_box_handler($item, $cbArg) {
+		$box=$cbArg["args"];
+		//$this->defaultBox->renderItemFormBox($item);
+		$box->renderItemFormBox($item);
 	}
 
 	/**
@@ -441,7 +387,7 @@ abstract class WpCrud extends WP_List_Table {
 	 * Get specified value from an item.
 	 * Implement in sub-class.
 	 */
-	protected function getFieldValue($item, $field) {
+	public function getFieldValue($item, $field) {
 		if (is_array($item))
 			return $item[$field];
 
