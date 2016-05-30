@@ -35,6 +35,7 @@ abstract class WpCrud extends WP_List_Table {
 	private $editFields;
 	private $parentMenuSlug;
 	private $typeId;
+	private $boxes=array();
 
 	/**
 	 * Constructor.
@@ -49,6 +50,17 @@ abstract class WpCrud extends WP_List_Table {
 		$this->defaultBox->setWpCrud($this);
 
 		$this->init();
+	}
+
+	/**
+	 * Add a box.
+	 */
+	public function addBox($title) {
+		$box=new WpCrudBox($title);
+		$box->setWpCrud($this);
+		$this->boxes[]=$box;
+
+		return $box;
 	}
 
 	/**
@@ -109,7 +121,16 @@ abstract class WpCrud extends WP_List_Table {
 		if ($this->editFields)
 			return $this->editFields;
 
-		return $this->defaultBox->getFieldIds();
+		$fieldIds=$this->defaultBox->getFieldIds();
+
+		foreach ($this->boxes as $box) {
+			$boxFieldIds=$box->getFieldIds();
+
+			foreach ($boxFieldIds as $boxFieldId)
+				$fieldIds[]=$boxFieldId;
+		}
+
+		return $fieldIds;
 	}
 
 	/**
@@ -328,6 +349,17 @@ abstract class WpCrud extends WP_List_Table {
 			'normal_'.$this->typeId,
 			'default',
 			$this->defaultBox);
+
+		foreach ($this->boxes as $box) {
+			add_meta_box(
+				$this->typeId."_meta_box_2",
+				$box->getTitle(),
+				array($this,"meta_box_handler"),
+				$this->typeId,
+				'normal_'.$this->typeId,
+				'default',
+				$box);
+		}
 
 		/*add_meta_box(
 			$this->typeId."_another_meta_box",

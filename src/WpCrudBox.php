@@ -19,6 +19,13 @@ class WpCrudBox {
 	}
 
 	/**
+	 * Get title.
+	 */
+	public function getTitle() {
+		return $this->title;
+	}
+
+	/**
 	 * Set reference back to parent.
 	 */
 	public function setWpCrud($wpCrud) {
