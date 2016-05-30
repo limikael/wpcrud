@@ -2,6 +2,9 @@
 
 namespace wpcrud;
 
+/**
+ * Specifies how one field shoud be displayed.
+ */
 class WpCrudFieldSpec {
 
 	public $field;
@@ -10,6 +13,9 @@ class WpCrudFieldSpec {
 	public $options;
 	public $description;
 
+	/**
+	 * Consructor.
+	 */
 	public function __construct($field) {
 		$this->field=$field;
 		$this->label=$field;

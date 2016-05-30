@@ -3,9 +3,11 @@
 require_once ABSPATH.'wp-admin/includes/class-wp-list-table.php';
 require_once __DIR__."/src/Template.php";
 require_once __DIR__."/src/WpCrudFieldSpec.php";
+require_once __DIR__."/src/WpCrudBox.php";
 
 use wpcrud\Template;
 use wpcrud\WpCrudFieldSpec;
+use wpcrud\WpCrudBox;
 
 /**
  * Generic CRUD interface for Wordpress.
@@ -28,7 +30,8 @@ abstract class WpCrud extends WP_List_Table {
 
 	private static $scriptsEnqueued;
 
-	private $fields=array();
+	//private $fields=array();
+	private $defaultBox;
 	private $listFields;
 	private $editFields;
 	private $parentMenuSlug;
@@ -38,11 +41,12 @@ abstract class WpCrud extends WP_List_Table {
 	 * Constructor.
 	 */
 	public final function __construct() {
-		$this->typeId=strtolower(get_called_class());
-
 		parent::__construct(array(
 			"screen"=>$this->typeId
 		));
+
+		$this->typeId=strtolower(get_called_class());
+		$this->defaultBox=new WpCrudBox($this->getLiteralWrap("typeName"));
 
 		$this->init();
 	}
@@ -67,10 +71,11 @@ abstract class WpCrud extends WP_List_Table {
 	 *
 	 *     $this->addField("myfield")->label("My Field")->...
 	 */
-	protected function addField($field) {
-		$this->fields[$field]=new WpCrudFieldSpec($field);
+	protected function addField($fieldId) {
+		return $this->defaultBox->addField($fieldId);
 
-		return $this->fields[$field];
+		/*$this->fields[$field]=new WpCrudFieldSpec($field);
+		return $this->fields[$field];*/
 	}
 
 	/**
@@ -91,11 +96,18 @@ abstract class WpCrud extends WP_List_Table {
 	 * Get field spec.
 	 * Internal.
 	 */
-	private function getFieldSpec($field) {
-		if (!isset($this->fields[$field]))
+	private function getFieldSpec($fieldId) {
+		$fieldSpec=$this->defaultBox->getFieldSpec($fieldId);
+
+		if (!isset($fieldSpec))
+			$fieldSpec=$this->defaultBox->addField($fieldId);
+
+		return $fieldSpec;
+
+/*		if (!isset($this->fields[$field]))
 			$this->addField($field);
 
-		return $this->fields[$field];
+		return $this->fields[$field];*/
 	}
 
 	/**
@@ -105,7 +117,8 @@ abstract class WpCrud extends WP_List_Table {
 		if ($this->editFields)
 			return $this->editFields;
 
-		return array_keys($this->fields);
+		return $this->defaultBox->getFieldIds();
+		//return array_keys($this->fields);
 	}
 
 	/**
@@ -115,7 +128,8 @@ abstract class WpCrud extends WP_List_Table {
 		if ($this->listFields)
 			return $this->listFields;
 
-		return array_keys($this->fields);
+		return $this->defaultBox->getFieldIds();
+		//return array_keys($this->fields);
 	}
 
 	/**
@@ -316,12 +330,28 @@ abstract class WpCrud extends WP_List_Table {
 		else
 			$item=$this->createItem();
 
-		add_meta_box($this->typeId."_meta_box",$this->getLiteralWrap("typeName"),array($this,"meta_box_handler"),$this->typeId, 'normal_'.$this->typeId, 'default');
+		add_meta_box(
+			$this->typeId."_meta_box",
+			$this->getLiteralWrap("typeName"),
+			array($this,"meta_box_handler"),
+			$this->typeId,
+			'normal_'.$this->typeId,
+			'default',
+			"oneee");
+
+		/*add_meta_box(
+			$this->typeId."_another_meta_box",
+			$this->getLiteralWrap("typeName")." another...",
+			array($this,"meta_box_handler"),
+			$this->typeId,
+			'normal_'.$this->typeId,
+			'default',
+			"twooo");*/
 
 		$template->set("title",$this->getLiteralWrap("typeName"));
 		$template->set("nonce",wp_create_nonce(basename(__FILE__)));
 		$template->set("backlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId));
-		$template->set("metabox",$this->typeId);
+		$template->set("metaboxPage",$this->typeId);
 		$template->set("metaboxContext","normal_".$this->typeId);
 		$template->set("item",$item);
 		$template->show();
@@ -331,7 +361,9 @@ abstract class WpCrud extends WP_List_Table {
 	 * Meta box handler.
 	 * Internal.
 	 */
-	public function meta_box_handler($item) {
+	public function meta_box_handler($item, $box) {
+		//print_r($box);
+
 		$template=new Template(__DIR__."/tpl/itemformbox.php");
 		$fields=array();
 
@@ -512,6 +544,10 @@ abstract class WpCrud extends WP_List_Table {
 		wp_register_style("wpcrud",admin_url('admin-ajax.php')."?action=wpcrud_res&res=wpcrud.css");
 
 		wp_enqueue_media();
+
+		wp_enqueue_script('common');
+		wp_enqueue_script('wp-lists');
+		wp_enqueue_script('postbox');
 	}
 
 	/**

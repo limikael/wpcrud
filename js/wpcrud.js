@@ -1,5 +1,11 @@
 jQuery(document).ready(function($) {
 
+	// Make the metaboxes work.
+	$(".handlediv").click(function() {
+		console.log("here...");
+		$(this).closest(".postbox").toggleClass('closed');
+	});
+
 	// Initialize the date time picker for timestamp fields.
 	$('.wpcrud-timestamp').datetimepicker({
 		format: 'Y-m-d H:i'
