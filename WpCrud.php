@@ -107,10 +107,16 @@ abstract class WpCrud extends WP_List_Table {
 	 */
 	private function getFieldSpec($fieldId) {
 		$fieldSpec=$this->defaultBox->getFieldSpec($fieldId);
+		if ($fieldSpec)
+			return $fieldSpec;
 
-		if (!isset($fieldSpec))
-			$fieldSpec=$this->defaultBox->addField($fieldId);
+		foreach ($this->boxes as $box) {
+			$fieldSpec=$box->getFieldSpec($fieldId);
+			if ($fieldSpec)
+				return $fieldSpec;
+		}
 
+		$fieldSpec=$this->defaultBox->addField($fieldId);
 		return $fieldSpec;
 	}
 
@@ -151,9 +157,9 @@ abstract class WpCrud extends WP_List_Table {
 		$a=array();
 		$a["cb"]='<input type="checkbox" />';
 
-		foreach ($this->getListFields() as $field) {
-			$fieldspec=$this->getFieldSpec($field);
-			$a[$field]=$fieldspec->label;
+		foreach ($this->getListFields() as $fieldId) {
+			$fieldspec=$this->getFieldSpec($fieldId);
+			$a[$fieldId]=$fieldspec->label;
 		}
 
 		return $a;

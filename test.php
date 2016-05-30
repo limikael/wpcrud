@@ -20,14 +20,14 @@ class WpCrudTest extends WpCrud {
 			->type("timestamp")
 			->description("this is a timestamp");
 
-		$box=$this->addBox("Images");
-
-		$box->addField("sel")
+		$this->addField("sel")
 			->type("select")
 			->options(array(
 				"a"=>"First Letter",
 				"b"=>"Second Letter"
 			));
+
+		$box=$this->addBox("Images");
 
 		$box->addField("im")
 			->type("media-image")
@@ -36,6 +36,7 @@ class WpCrudTest extends WpCrud {
 		$box->addField("im2")
 			->type("media-image");
 
+//		$this->setListFields(array("text","sel","im2"));
 //		$this->setParentMenuSlug("h5p");
 	}
 
