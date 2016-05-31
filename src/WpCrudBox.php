@@ -104,7 +104,7 @@ class WpCrudBox {
 		}
 
 		$template->set("fields",$fields);
-		$template->set("deleteIconUrl",admin_url('admin-ajax.php')."?action=wpcrud_res&res=delete-icon.png");
+		$template->set("deleteIconUrl",admin_url('admin-ajax.php')."?action=wpcrud_res&res=img/delete-icon.png");
 		$template->set("emptyImageUrl",site_url()."/wp-includes/images/media/default.png");
 		$template->show();
 	}

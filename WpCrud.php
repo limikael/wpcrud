@@ -32,7 +32,6 @@ abstract class WpCrud extends WP_List_Table {
 
 	private $defaultBox;
 	private $listFields;
-	private $editFields;
 	private $parentMenuSlug;
 	private $typeId;
 	private $boxes=array();
@@ -88,13 +87,6 @@ abstract class WpCrud extends WP_List_Table {
 	}
 
 	/**
-	 * Which fields should be editable?
-	 */
-	public function setEditFields($fieldNames) {
-		$this->editFields=$fieldNames;
-	}
-
-	/**
 	 * Which fields should be listable?
 	 */
 	public function setListFields($fieldNames) {
@@ -116,17 +108,13 @@ abstract class WpCrud extends WP_List_Table {
 				return $fieldSpec;
 		}
 
-		$fieldSpec=$this->defaultBox->addField($fieldId);
-		return $fieldSpec;
+		throw new Exception("No such field: ".$fieldId);
 	}
 
 	/**
 	 * Get edit fields.
 	 */
-	private function getEditFields() {
-		if ($this->editFields)
-			return $this->editFields;
-
+	private function getAllFields() {
 		$fieldIds=$this->defaultBox->getFieldIds();
 
 		foreach ($this->boxes as $box) {
@@ -305,7 +293,7 @@ abstract class WpCrud extends WP_List_Table {
 			else
 				$item=$this->createItem();
 
-			foreach ($this->getEditFields() as $field) {
+			foreach ($this->getAllFields() as $field) {
 				$fieldspec=$this->getFieldSpec($field);
 				$v=$_REQUEST[$field];
 
@@ -367,15 +355,6 @@ abstract class WpCrud extends WP_List_Table {
 				$box);
 		}
 
-		/*add_meta_box(
-			$this->typeId."_another_meta_box",
-			$this->getLiteralWrap("typeName")." another...",
-			array($this,"meta_box_handler"),
-			$this->typeId,
-			'normal_'.$this->typeId,
-			'default',
-			"twooo");*/
-
 		$template->set("title",$this->getLiteralWrap("typeName"));
 		$template->set("nonce",wp_create_nonce(basename(__FILE__)));
 		$template->set("backlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId));
@@ -391,7 +370,6 @@ abstract class WpCrud extends WP_List_Table {
 	 */
 	public function meta_box_handler($item, $cbArg) {
 		$box=$cbArg["args"];
-		//$this->defaultBox->renderItemFormBox($item);
 		$box->renderItemFormBox($item);
 	}
 
@@ -479,37 +457,30 @@ abstract class WpCrud extends WP_List_Table {
 	 * Serve frontend resource.
 	 */
 	public static function res() {
-		switch ($_REQUEST["res"]) {
-			case "jquery.datetimepicker.js":
-				header('Content-Type: application/javascript');
-				readfile(__DIR__."/res/jquery.datetimepicker.js");
-				exit;
-				break;
+		$resFiles=array(
+			"res/jquery.datetimepicker.js",
+			"res/jquery.datetimepicker.css",
+			"js/wpcrud.js",
+			"css/wpcrud.css",
+			"img/delete-icon.png"
+		);
 
-			case "jquery.datetimepicker.css":
-				header("Content-Type: text/css");
-				readfile(__DIR__."/res/jquery.datetimepicker.css");
-				exit;
-				break;
+		$mimeTypes=array(
+			"js"=>"application/javascript",
+			"css"=>"text/css",
+			"png"=>"image/png"
+		);
 
-			case "wpcrud.js":
-				header('Content-Type: application/javascript');
-				readfile(__DIR__."/js/wpcrud.js");
-				exit;
-				break;
+		$resFile=$_REQUEST["res"];
 
-			case "wpcrud.css":
-				header('Content-Type: text/css');
-				readfile(__DIR__."/css/wpcrud.css");
-				exit;
-				break;
+		if (!in_array($resFile,$resFiles))
+			return;
 
-			case "delete-icon.png":
-				header("Content-type: image/png");
-				readfile(__DIR__."/img/delete-icon.png");
-				exit;
-				break;
-		}
+		$resFilePath=__DIR__."/".$resFile;
+		$ext=pathinfo($resFilePath,PATHINFO_EXTENSION);
+		header("Content-Type: ".$mimeTypes[$ext]);
+		readfile($resFilePath);
+		exit;
 	}
 
 	/**
@@ -521,11 +492,11 @@ abstract class WpCrud extends WP_List_Table {
 
 		WpCrud::$scriptsEnqueued=TRUE;
 
-		wp_register_script("jquery-datetimepicker",admin_url('admin-ajax.php')."?action=wpcrud_res&res=jquery.datetimepicker.js");
-		wp_register_style("jquery-datetimepicker",admin_url('admin-ajax.php')."?action=wpcrud_res&res=jquery.datetimepicker.css");
+		wp_register_script("jquery-datetimepicker",admin_url('admin-ajax.php')."?action=wpcrud_res&res=res/jquery.datetimepicker.js");
+		wp_register_style("jquery-datetimepicker",admin_url('admin-ajax.php')."?action=wpcrud_res&res=res/jquery.datetimepicker.css");
 
-		wp_register_script("wpcrud",admin_url('admin-ajax.php')."?action=wpcrud_res&res=wpcrud.js");
-		wp_register_style("wpcrud",admin_url('admin-ajax.php')."?action=wpcrud_res&res=wpcrud.css");
+		wp_register_script("wpcrud",admin_url('admin-ajax.php')."?action=wpcrud_res&res=js/wpcrud.js");
+		wp_register_style("wpcrud",admin_url('admin-ajax.php')."?action=wpcrud_res&res=css/wpcrud.css");
 
 		wp_enqueue_media();
 
