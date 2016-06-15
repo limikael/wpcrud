@@ -5,7 +5,7 @@ namespace wpcrud;
 /**
  * A simple templating engine. This is a simple example of how to use this class:
  *
- * <code>    
+ * <code>
  *   $t=new Template("templatefile.php");
  *   $t->set("hello","hello world");
  *   $t->show();
@@ -13,7 +13,7 @@ namespace wpcrud;
  *
  * In this example, we have a template called `templatefile.php` that gets loaded
  * and rendered using the `show` call. The variables registered using the `set` method
- * will be made available to the template in the global scope. The contents of 
+ * will be made available to the template in the global scope. The contents of
  * the `templatefile.php` for this example could be:
  *
  * <code>
@@ -39,8 +39,8 @@ class Template {
 	}
 
 	/**
-	 * Set a variable that can be accessed by the template. 
-	 * 
+	 * Set a variable that can be accessed by the template.
+	 *
 	 * The variable will be available to the template in the global scope.
 	 * @param mixed $name The name of the variable.
 	 * @param mixed $value The value that the variable should take.
@@ -61,7 +61,7 @@ class Template {
 
 	/**
 	 * Render template, but don't ouput it to the browser.
-	 * 
+	 *
 	 * This is useful if we want to
 	 * use a template inside another template. For example, we might have a
 	 * page template that defaines header and footer for our page. Inside the page
@@ -91,4 +91,4 @@ class Template {
 		require $this->filename;
 		return ob_get_clean();
 	}
-	}
+}
