@@ -76,7 +76,7 @@ abstract class WpCrud extends WP_List_Table {
 	}
 
 	/**
-	 * Add a field to be managed. This function returns a 
+	 * Add a field to be managed. This function returns a
 	 * WpCrudFieldSpec object, it is intended to be used something
 	 * like this in init function:
 	 *
@@ -260,7 +260,7 @@ abstract class WpCrud extends WP_List_Table {
 
 		switch ($literal) {
 			case "description":
-				return "blabla";
+				return "";
 
 			case "typeName":
 				return get_called_class();
