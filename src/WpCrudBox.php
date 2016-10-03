@@ -37,7 +37,7 @@ class WpCrudBox {
 	 */
 	public function addField($fieldId) {
 		if ($this->fields[$fieldId])
-			throw new Exception("Field already added.");
+			throw new \Exception("Field already added.");
 
 		$this->fields[$fieldId]=new WpCrudFieldSpec($fieldId);
 
