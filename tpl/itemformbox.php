@@ -57,6 +57,12 @@
 								media-image-id="<?php echo $field["field"]; ?>"
 								id="<?php echo $field["field"] ?>-delete-button"/>
 						</div>
+					<?php } else if ($field["spec"]->type=="label") { ?>
+						<?php echo $field["value"]; ?>
+						<input id="<?php echo $field["field"] ?>"
+								name="<?php echo $field["field"] ?>" 
+								value="<?php echo esc_attr($field['value'])?>"
+								type="hidden"/>
 					<?php } else { ?>
 						<input id="<?php echo $field["field"] ?>" 
 								name="<?php echo $field["field"] ?>" 

@@ -24,7 +24,6 @@ use wpcrud\WpCrudBox;
  * - saveItem
  * - deleteItem
  * - getAllItems
- * - getLiteral
  */
 abstract class WpCrud extends WP_List_Table {
 
@@ -35,17 +34,27 @@ abstract class WpCrud extends WP_List_Table {
 	private $parentMenuSlug;
 	private $typeId;
 	private $boxes=array();
+	private $config;
+	private $flags;
 
 	/**
 	 * Constructor.
 	 */
 	public final function __construct() {
+		$this->typeId=strtolower(get_called_class());
+
 		parent::__construct(array(
 			"screen"=>$this->typeId
 		));
 
-		$this->typeId=strtolower(get_called_class());
-		$this->defaultBox=new WpCrudBox($this->getLiteralWrap("typeName"));
+		$this->config=array(
+			"typeName"=>get_called_class(),
+			"description"=>"",
+			"enableCreate"=>TRUE,
+			"enableDelete"=>TRUE,
+		);
+
+		$this->defaultBox=new WpCrudBox($this->typeId);
 		$this->defaultBox->setWpCrud($this);
 
 		$this->init();
@@ -159,7 +168,8 @@ abstract class WpCrud extends WP_List_Table {
 	 */
 	public function column_cb($item) {
 		return sprintf(
-			'<input type="checkbox" name="_bulkid[]" value="%s" />', $item->id
+			'<input type="checkbox" name="_bulkid[]" value="%s" />', 
+			$this->getFieldValue($item,"id")
 		);
 	}
 
@@ -172,12 +182,22 @@ abstract class WpCrud extends WP_List_Table {
 
 		if ($column_name==$listFields[0]) {
 			$actions = array(
-				'edit' => sprintf('<a href="?page=%s_form&id=%s">%s</a>', $this->typeId, $item->id, __('Edit', $this->typeId)),
-				'delete' => sprintf('<a href="?page=%s&action=delete&id=%s" onclick="return confirm(\'Are you sure? This operation cannot be undone!\');">%s</a>', $_REQUEST['page'], $item->id, __('Delete', $this->typeId)),
+				'edit' => 
+					sprintf('<a href="?page=%s_form&id=%s">%s</a>', 
+						$this->typeId, 
+						$this->getFieldValue($item,"id"), 
+						__('Edit', $this->typeId)
+					),
+				'delete' => 
+					sprintf('<a href="?page=%s&action=delete&id=%s" onclick="return confirm(\'Are you sure? This operation cannot be undone!\');">%s</a>',
+						$_REQUEST['page'], 
+						$this->getFieldValue($item,"id"),
+						__('Delete', $this->typeId)
+					),
 			);
 
 			return sprintf('%s %s',
-				$item->$column_name,
+				$this->getFieldValue($item,$column_name),
 				$this->row_actions($actions)
 			);
 		}
@@ -185,11 +205,11 @@ abstract class WpCrud extends WP_List_Table {
 		$fieldspec=$this->getFieldSpec($column_name);
 
 		if ($fieldspec->type=="select") {
-			return $fieldspec->options[$item->$column_name];
+			return $fieldspec->options[$this->getFieldValue($item,$column_name)];
 		}
 
 		else if ($fieldspec->type=="timestamp") {
-			$v=$item->$column_name;
+			$v=$this->getFieldValue($item,$column_name);
 			if (!$v)
 				return "";
 
@@ -198,10 +218,11 @@ abstract class WpCrud extends WP_List_Table {
 
 		else if ($fieldspec->type=="media-image") {
 			return sprintf('<img src="%s" class="wpcrud-list-media-image" style="max-width: 50px; max-height: 50px">',
-				esc_attr($item->$column_name));
+				esc_attr($this->getFieldValue($item,$column_name))
+			);
 		}
 
-		return $item->$column_name;
+		return $this->getFieldValue($item,$column_name);
 	}
 
 	/**
@@ -214,6 +235,7 @@ abstract class WpCrud extends WP_List_Table {
 		wp_enqueue_style("jquery-datetimepicker");
 
 		$template=new Template(__DIR__."/tpl/itemlist.php");
+		$template->set("enableCreate",$this->config["enableCreate"]);
 
 		if (isset($_REQUEST["action"]) && $_REQUEST["action"]=="delete") {
 			$item=$this->getItem($_REQUEST["id"]);
@@ -231,7 +253,7 @@ abstract class WpCrud extends WP_List_Table {
 				$item=$this->getItem($id);
 
 				if ($item) {
-					$item->delete();
+					$this->deleteItem($item);
 					$numitems++;
 				}
 			}
@@ -241,8 +263,8 @@ abstract class WpCrud extends WP_List_Table {
 
 		$this->items=$this->getAllItems();
 
-		$template->set("description",$this->getLiteralWrap("description"));
-		$template->set("title",$this->getLiteralWrap("typeName"));
+		$template->set("description",$this->getConfig("description"));
+		$template->set("title",$this->getConfig("typeName"));
 		$template->set("typeId",$this->typeId);
 		$template->set("listTable",$this);
 		$template->set("addlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId.'_form'));
@@ -250,28 +272,21 @@ abstract class WpCrud extends WP_List_Table {
 	}
 
 	/**
-	 * Call potentially overridden getLiteral and provide default
-	 * if not customized.
-	 */
-	private function getLiteralWrap($literal) {
-		$text=$this->getLiteral($literal);
-		if (isset($text))
-			return $text;
-
-		switch ($literal) {
-			case "description":
-				return "";
-
-			case "typeName":
-				return get_called_class();
-		}
-	}
-
-	/**
 	 * Override this in subclass to provide a customized name, description
 	 * and other user interface elements.
 	 */
-	public function getLiteral($literal) {
+	final public function getConfig($config) {
+		return $this->config[$config];
+	}
+
+	/**
+	 * Set literal.
+	 */
+	public function setConfig($config, $value) {
+		if (!isset($this->config[$config]))
+			throw new Exception("Unknown literal: ".$config);
+
+		$this->config[$config]=$value;
 	}
 
 	/**
@@ -325,7 +340,7 @@ abstract class WpCrud extends WP_List_Table {
 
 			else {
 				$this->saveItem($item);
-				$template->set("message",$this->getLiteralWrap("typeName")." saved.");
+				$template->set("message",$this->getConfig("typeName")." saved.");
 			}
 		}
 
@@ -337,7 +352,7 @@ abstract class WpCrud extends WP_List_Table {
 
 		add_meta_box(
 			$this->typeId."_meta_box",
-			$this->getLiteralWrap("typeName"),
+			$this->getConfig("typeName"),
 			array($this,"meta_box_handler"),
 			$this->typeId,
 			'normal_'.$this->typeId,
@@ -355,7 +370,7 @@ abstract class WpCrud extends WP_List_Table {
 				$box);
 		}
 
-		$template->set("title",$this->getLiteralWrap("typeName"));
+		$template->set("title",$this->getConfig("typeName"));
 		$template->set("nonce",wp_create_nonce(basename(__FILE__)));
 		$template->set("backlink",get_admin_url(get_current_blog_id(),'admin.php?page='.$this->typeId));
 		$template->set("metaboxPage",$this->typeId);
@@ -514,8 +529,8 @@ abstract class WpCrud extends WP_List_Table {
 		if ($instance->parentMenuSlug)
 			$screenId=add_submenu_page(
 				$instance->parentMenuSlug,
-				"Manage ".$instance->getLiteralWrap("typeName"),
-				"Manage ".$instance->getLiteralWrap("typeName"),
+				"Manage ".$instance->getConfig("typeName"),
+				"Manage ".$instance->getConfig("typeName"),
 				"manage_options",
 				$instance->typeId,
 				array($instance,"list_handler")
@@ -523,8 +538,8 @@ abstract class WpCrud extends WP_List_Table {
 
 		else
 			$screenId=add_menu_page(
-				$instance->getLiteralWrap("typeName"),
-				$instance->getLiteralWrap("typeName"),
+				$instance->getConfig("typeName"),
+				$instance->getConfig("typeName"),
 				"manage_options",
 				$instance->typeId,
 				array($instance,"list_handler")
@@ -532,8 +547,8 @@ abstract class WpCrud extends WP_List_Table {
 
 	    add_submenu_page(
 	    	NULL,
-	    	"Edit ".$instance->getLiteralWrap("typeName"),
-	    	"Edit ".$instance->getLiteralWrap("typeName"),
+	    	"Edit ".$instance->getConfig("typeName"),
+	    	"Edit ".$instance->getConfig("typeName"),
 	    	'manage_options',
 	    	$instance->typeId.'_form',
 	    	array($instance,"form_handler")

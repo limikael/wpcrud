@@ -2,7 +2,9 @@
 	<div class="icon32 icon32-posts-post" id="icon-edit"><br/></div>
 	<h2>
 		<?php echo $title; ?>
-		<a class="add-new-h2" href="<?php echo $addlink ;?>">Add new</a>
+		<?php if ($enableCreate) { ?>
+			<a class="add-new-h2" href="<?php echo $addlink ;?>">Add new</a>
+		<?php } ?>
 	</h2>
 
 	<?php if (!empty($description)) { ?>
